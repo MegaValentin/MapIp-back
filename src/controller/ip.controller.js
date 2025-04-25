@@ -57,9 +57,41 @@ export const deleteIp = async (req, res) => {
 }
 
 export const uploadIp = async (req, res) => {
-    res.send('Ruta funcionando')
-} 
+    const { id } = req.params
+    
+    const {
+        estado,
+        hostname,
+        mac,
+        asignadaA,
+        detectada,
+        observaciones,
+        ultimaDeteccion
+    } = req.body
 
+    try {
+        const ipToUpdate = await Ip.findById(id)
+        if(!ipToUpdate){
+            return res.status(404).json({ message: "IP no encontrada"})
+        }
+
+        ipToUpdate.estado = estado ?? ipToUpdate.estado
+        ipToUpdate.hostname = hostname ?? ipToUpdate.hostname
+        ipToUpdate.mac = mac ?? ipToUpdate.mac
+        ipToUpdate.asignadaA = asignadaA ?? ipToUpdate.asignadaA
+        ipToUpdate.observaciones = observaciones ?? ipToUpdate.observaciones
+        ipToUpdate.detectada = detectada ?? ipToUpdate.detectada
+        ipToUpdate.ultimaDeteccion = ultimaDeteccion ?? ipToUpdate.ultimaDeteccion
+    
+        await ipToUpdate.save()
+
+        res.json({message: "IP actualizada correctamente", ip: ipToUpdate})
+
+    } catch (error) {
+        console.error("Error al actualizar la IP: ", error.message)
+        res.status(500).json({ message: "Error al actualizar la IP", error: error})
+    }
+}
 export const addIp = async (req, res) => {
     res.send('Ruta funcionando')
 }
@@ -86,9 +118,15 @@ export const generateIPs   = async(req, res) => {
 
             ips.push({
                 direccion,
-                marcaraSubRed: subnet.subnetMask,
+                marcaraSubRed: subnet.subnetMask || "",
                 puertaEnlace,
-                estado: 'libre'
+                estado: 'libre',
+                hostname: "",
+                mac: "",
+                asignadaA: "",
+                obsevaciones: "",
+                detectada: false,
+                ultimaDeteccion: null
             });
         }
 
