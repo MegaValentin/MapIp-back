@@ -4,24 +4,7 @@ import Ip from "../models/ip.model.js"
 export const getIps = async (req, res) => {
     try {
         const ips = await Ip.find();
-
-        const completadas = ips.map(ip => ({
-            direccion: ip.direccion || "",
-            marcaraSubRed: ip.marcaraSubRed || "",
-            puertaEnlace: ip.puertaEnlace || "",
-            estado: ip.estado || "libre",
-            hostname: ip.hostname || "",
-            mac: ip.mac || "",
-            asignadaA: ip.asignadaA || "",
-            obsevaciones: ip.obsevaciones || "",
-            detectada: ip.detectada ?? false,
-            ultimaDeteccion: ip.ultimaDeteccion || null,
-            createdAt: ip.createdAt || null,
-            updatedAt: ip.updatedAt || null,
-            _id: ip._id
-        }));
-
-        res.json(completadas);
+        res.json(ips);
 
     } catch (error) {
         return res.status(500).json({
