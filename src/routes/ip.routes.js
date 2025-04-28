@@ -4,8 +4,10 @@ getIp,
 addIp,
 deleteIp,
 uploadIp,
-generateIPs } from "../controller/ip.controller.js";
+generateIPs,
+getIpsPuertasEnlaces } from "../controller/ip.controller.js";
 import { validateUpdate } from "../middleware/validator.updatedIp.js"
+import { validateMongoId } from "../middleware/validator.mongoId.js";
 
 const router = Router()
 
@@ -13,12 +15,14 @@ router.get('/ips',getIps)
 
 router.get('/ip/:id', getIp)
 
+router.get('/ips/gateway/:puertaEnlace', getIpsPuertasEnlaces)
+
 router.post('/addip', addIp)
 
-router.delete('/ips/:id', deleteIp)
+router.post('/generateip', generateIPs )
+
+router.delete('/ips/:id', validateMongoId, deleteIp)
 
 router.put('/ips/:id', validateUpdate, uploadIp)
-
-router.post('/generateip', generateIPs )
 
 export default router

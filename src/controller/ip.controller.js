@@ -33,7 +33,20 @@ export const getIp = async (req, res) => {
 };
 
 export const deleteIp = async (req, res) => {
-  res.send("Ruta funcionando");
+  try {
+    const { id } = req.params
+
+    const ipEliminda = await Ip.findByIdAndDelete(id)
+
+    if (!ipEliminda){
+        return res.status(404).json({ message: "No se encontro la ip para eliminar "})
+    }
+
+    return res.json({ message: "IP eliminada correctamente ", ip:ipEliminda})
+  } catch (error) {
+    consolo.error('Error al eliminar la IP: ', error.message)
+    return res.status(500).json({ message: "Error al eliminar la IP: ", error: error.message})
+  }
 };
 
 export const uploadIp = async (req, res) => {
@@ -80,6 +93,7 @@ export const uploadIp = async (req, res) => {
       message: "IP actulizada correctamente",
       ip: ipActualizada,
     });
+
   } catch (error) {
     console.error("Error al actulizar IP: ", error);
     return res
@@ -134,3 +148,17 @@ export const generateIPs = async (req, res) => {
       .json({ message: "Error al generar IPs ", eror: error.message });
   }
 };
+
+export const getIpsPuertasEnlaces = async (req, res) => {
+    try {
+        const { puertaEnlace } = req.params
+
+        const ips = await Ip.find( { puertaEnlace })
+
+        res.json(ips)
+
+    } catch (error) {
+        console.error("Error al buscar IPs por puerta de enlace", error.message)
+        return res.status(500).json({ message: "Error al buscar las Ips por puerta de enlace "})
+    }
+}
