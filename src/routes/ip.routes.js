@@ -1,11 +1,14 @@
 import { Router } from "express";
+
 import { getIps,
 getIp,
 addIp,
 deleteIp,
 uploadIp,
 generateIPs,
-getIpsPuertasEnlaces } from "../controller/ip.controller.js";
+getIpsPuertasEnlaces,
+getIpsByStateAndGateway, } from "../controller/ip.controller.js";
+
 import { validateUpdate } from "../middleware/validator.updatedIp.js"
 import { validateMongoId } from "../middleware/validator.mongoId.js";
 
@@ -16,6 +19,8 @@ router.get('/ips',getIps)
 router.get('/ip/:id', getIp)
 
 router.get('/ips/gateway/:puertaEnlace', getIpsPuertasEnlaces)
+
+router.get('/ips/gatewayandstates', getIpsByStateAndGateway )
 
 router.post('/addip', addIp)
 

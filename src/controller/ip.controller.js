@@ -162,3 +162,30 @@ export const getIpsPuertasEnlaces = async (req, res) => {
         return res.status(500).json({ message: "Error al buscar las Ips por puerta de enlace "})
     }
 }
+
+export const getIpsByStateAndGateway  = async (req, res ) => {
+   try {
+    const { estado = '', puertaEnlace= ''} = req.query
+
+    const filter ={}
+
+    if(puertaEnlace){
+        filter.puertaEnlace = { $regex: new RegExp(puertaEnlace, 'i')}
+    }
+
+    if(estado){
+        filter.estado = estado
+    }
+
+    const ips = await Ip.find(filter)
+
+    if(ips.length === 0){
+        return res.status(404).json({ message: "No se encontraron Ips con los parametros proporsionados"})
+    }
+
+    res.json(ips)
+   } catch (error) {
+    console.error("Error al obtener las IPs: ", error.message)
+    return res.status(500).json({ message: 'Error al obtener las Ips'})
+   }
+}
