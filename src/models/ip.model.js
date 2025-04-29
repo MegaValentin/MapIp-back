@@ -18,7 +18,7 @@ const ipSchema = new mongoose.Schema({
     },
     hostname: String,
     mac: String,
-    asignadaA: String,
+    area: String,
     obsevaciones: String,
     detectada: {
         type: Boolean,
