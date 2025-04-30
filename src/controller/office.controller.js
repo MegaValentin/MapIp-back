@@ -103,3 +103,34 @@ export const addOffice = async (req, res) => {
         return res.status(500).json({ message: 'Error al agregar el área.'})
     }
 }
+
+export const addAllOffice = async (req, res) => {
+    const file = req.file
+
+    console.log(file)
+
+    if(!file){
+        return res.status(400).json({error: "No file upload"})
+    }
+
+    try {
+
+        const officebook = xlsx.readFile(file.path)
+        const sheetName = officebook.SheetNames[0]
+        const worksheet = officebook.Sheets[sheetName]
+        const data = xlsx.utils.sheet_to_json(worksheet)
+
+        console.log(data)
+
+        const newOffice = data.map((row) => ({
+            area:row.Area,
+        }))
+
+        await Office.insertMany(newOffice)
+        fs.unlinkSync(file.path)
+
+        res.status(200).json({message: 'Arear agregadas correctamente'})
+    } catch (error) {
+        res.status(500).json({error:error.message})
+    }
+}
