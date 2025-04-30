@@ -1,7 +1,11 @@
 import { Router } from "express"
 
 import { getOffices,
-getOffice } from "../controller/office.controller"
+getOffice,
+deleteOffice,
+updatedOffice,
+addOffice,
+addAllOffice } from "../controller/office.controller.js"
 
 const router = Router()
 
@@ -9,13 +13,13 @@ router.get('/offices', getOffices)
 
 router.get('/office/:id', getOffice)
 
-router.put('/office/:id')
+router.put('/office/:id', updatedOffice)
 
-router.delete('/office/:id')
+router.delete('/office/:id', deleteOffice)
 
-router.post('/addoffice')
+router.post('/addoffice', addOffice)
 
-router.post('/addalloffices')
+router.post('/addalloffices', addAllOffice)
 
 
 export default router
