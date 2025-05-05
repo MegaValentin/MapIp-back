@@ -7,7 +7,8 @@ deleteIp,
 uploadIp,
 generateIPs,
 getIpsPuertasEnlaces,
-getIpsByStateAndGateway, } from "../controller/ip.controller.js";
+getIpsByStateAndGateway,
+getIpsByGatewayPaginated } from "../controller/ip.controller.js";
 
 import { validateUpdate } from "../middleware/validator.updatedIp.js"
 import { validateMongoId } from "../middleware/validator.mongoId.js";
@@ -21,6 +22,8 @@ router.get('/ip/:id', getIp)
 router.get('/ips/gateway/:puertaEnlace', getIpsPuertasEnlaces)
 
 router.get('/ips/gatewayandstates', getIpsByStateAndGateway )
+
+router.get('/ips/filtradas', getIpsByGatewayPaginated)
 
 router.post('/addip', addIp)
 

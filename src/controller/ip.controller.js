@@ -189,3 +189,39 @@ export const getIpsByStateAndGateway  = async (req, res ) => {
     return res.status(500).json({ message: 'Error al obtener las Ips'})
    }
 }
+
+export const getIpsByGatewayPaginated = async (req, res) => {
+  try {
+    const { puertaEnlace } = req.query
+
+    const page = parseInt(req.query.page) || 1
+    const limit = parseInt(req.query.limit) || 10
+    const skip = (page - 1 ) * limit
+
+    const filter = {}
+
+    if(puertaEnlace){
+      filter.puertaEnlace = puertaEnlace
+    }
+
+    const [total, ips] = await Promise.all([
+      Ip.countDocuments(filter),
+      Ip.find(filter)
+        .skip(skip)
+        .limit(limit)
+        .sort({ direccion: 1 })
+    ])
+
+    res.status(200).json({
+      total,
+      page,
+      totalPages: Math.ceil(total/limit),
+      data:ips
+
+    })
+
+  } catch (error) {
+    cosole.error('Error al obtener IPs filtradas: ', error.message)
+    res.status(500).json({ message: 'Error al obtener IPs filtradas'})
+  }
+}
