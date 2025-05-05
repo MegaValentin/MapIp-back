@@ -25,6 +25,10 @@ const ipSchema = new mongoose.Schema({
         default: false
     },
     ultimaDeteccion: Date,
+    isRouter: {
+        type: Boolean,
+        default: false
+    }
     
 }, {timestamps: true})
 
