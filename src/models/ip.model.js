@@ -19,7 +19,7 @@ const ipSchema = new mongoose.Schema({
     hostname: String,
     mac: String,
     area: String,
-    obsevaciones: String,
+    observaciones: String,
     detectada: {
         type: Boolean,
         default: false

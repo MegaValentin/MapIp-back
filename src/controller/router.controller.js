@@ -67,7 +67,7 @@ export const createRouter = async (req, res) => {
     // Actualizar la IP WAN
     ipWan.estado = "ocupada";
     ipWan.isRouter = true;
-    ipWan.obsevaciones = `Asignada al router "${nombre}"`;
+    ipWan.observaciones = `Asignada al router "${nombre}"`;
     await ipWan.save();
 
     res
@@ -78,3 +78,30 @@ export const createRouter = async (req, res) => {
     res.status(500).json({ message: "Error interno al crear el router" });
   }
 };
+
+export const deleteRouter = async (req, res) => {
+    const { id } = req.params
+
+    try {
+        const router = await Router.findById(id)
+
+        if(!router){
+            return res.status(404).json({ message: 'Router no encontrado'})
+        }
+
+        await Ip.findByIdAndUpdate(router.wan, {
+            estado: 'libre',
+            observaciones: "",
+            isRouter: false
+        })
+
+        await Router.findByIdAndDelete(id)
+
+        res.status(200).json({ message: 'Router elimando correctanemte'})
+
+
+    } catch (error) {
+        console.error('Error al eliminar el router: ', error.message)
+        res.status(500).json({message: 'Error al eliminar el router'})
+    }
+}
