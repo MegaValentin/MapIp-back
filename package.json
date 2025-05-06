@@ -16,6 +16,7 @@
     "express": "^5.1.0",
     "express-validator": "^7.2.1",
     "ip": "^2.0.1",
+    "ip-cidr": "^4.0.2",
     "mongoose": "^8.13.2",
     "xlsx": "^0.18.5"
   },

@@ -2,6 +2,8 @@ import Router from "../models/router.model.js";
 import Ip from "../models/ip.model.js";
 
 import mongoose from "mongoose";
+import ip from "ip";
+
 
 export const getIpsByRouter = async (req, res) => {
   const { id } = req.params;
@@ -28,13 +30,11 @@ export const getIpsByRouter = async (req, res) => {
 };
 
 export const createRouter = async (req, res) => {
-  const { nombre, wan, puertaEnlace, observaciones, area } = req.body;
+  const { nombre, wan, lanCidr, puertaEnlace, observaciones, area } = req.body;
 
   // Validación básica
-  if (!nombre || !wan || !puertaEnlace) {
-    return res
-      .status(400)
-      .json({ message: "Nombre, WAN y puerta de enlace son obligatorios" });
+  if (!lanCidr || !wan || !puertaEnlace) {
+    return res.status(400).json({ message: "Faltan datos obligatorios" });
   }
 
   // Validar que wan sea un ObjectId válido
@@ -43,7 +43,7 @@ export const createRouter = async (req, res) => {
   }
 
   try {
-    const ipWan = await Ip.findById(wan);
+    const ipWan = await Ip.findById(wan)
 
     if (!ipWan) {
       return res.status(404).json({ message: "La IP WAN no existe" });
@@ -56,7 +56,7 @@ export const createRouter = async (req, res) => {
     // Crear el router
     const nuevoRouter = new Router({
       nombre,
-      wan,
+      wan: ipWan._id,
       puertaEnlace,
       observaciones,
       area,
@@ -67,8 +67,33 @@ export const createRouter = async (req, res) => {
     // Actualizar la IP WAN
     ipWan.estado = "ocupada";
     ipWan.isRouter = true;
-    ipWan.observaciones = `Asignada al router "${nombre}"`;
+    ipWan.router = nuevoRouter._id;
+    ipWan.observaciones = "${nombre}";
+
     await ipWan.save();
+
+    const subnet = ip.cidrSubnet(lanCidr);
+    const start = ip.toLong(subnet.firstAddress);
+    const end = ip.toLong(subnet.lastAddress);
+    const gatewayLog = ip.toLong(puertaEnlace);
+
+    const ips = [];
+
+    for (let i = start; i <= end; i++) {
+      const direccion = ip.fromLong(i);
+
+      if (i === gatewayLog) continue;
+      ips.push({
+        direccion,
+        marcaraSubRed: subnet.subnetMask,
+        puertaEnlace,
+        estado: "libre",
+        area,
+        router: nuevoRouter._id,
+      });
+    }
+
+    await Ip.insertMany(ips, { ordered: false });
 
     res
       .status(201)
@@ -80,28 +105,26 @@ export const createRouter = async (req, res) => {
 };
 
 export const deleteRouter = async (req, res) => {
-    const { id } = req.params
+  const { id } = req.params;
 
-    try {
-        const router = await Router.findById(id)
+  try {
+    const router = await Router.findById(id);
 
-        if(!router){
-            return res.status(404).json({ message: 'Router no encontrado'})
-        }
-
-        await Ip.findByIdAndUpdate(router.wan, {
-            estado: 'libre',
-            observaciones: "",
-            isRouter: false
-        })
-
-        await Router.findByIdAndDelete(id)
-
-        res.status(200).json({ message: 'Router elimando correctanemte'})
-
-
-    } catch (error) {
-        console.error('Error al eliminar el router: ', error.message)
-        res.status(500).json({message: 'Error al eliminar el router'})
+    if (!router) {
+      return res.status(404).json({ message: "Router no encontrado" });
     }
-}
+
+    await Ip.findByIdAndUpdate(router.wan, {
+      estado: "libre",
+      observaciones: "",
+      isRouter: false,
+    });
+
+    await Router.findByIdAndDelete(id);
+
+    res.status(200).json({ message: "Router elimando correctanemte" });
+  } catch (error) {
+    console.error("Error al eliminar el router: ", error.message);
+    res.status(500).json({ message: "Error al eliminar el router" });
+  }
+};

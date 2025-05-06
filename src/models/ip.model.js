@@ -28,6 +28,11 @@ const ipSchema = new mongoose.Schema({
     isRouter: {
         type: Boolean,
         default: false
+    },
+    router: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Router', 
+        default: null
     }
     
 }, {timestamps: true})
