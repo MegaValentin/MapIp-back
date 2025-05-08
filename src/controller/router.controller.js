@@ -128,3 +128,53 @@ export const deleteRouter = async (req, res) => {
     res.status(500).json({ message: "Error al eliminar el router" });
   }
 };
+
+export const updatedRouter = async (req, res) => {
+  try {
+    const { id } = req.params
+
+    if(!id || id.length !== 24) {
+      return res.status(400).json({ message: "ID inválido"})
+    }
+
+    const {
+      nombre,
+      wan,
+      puertaEnlace,
+      observaciones,
+      area
+    } = req.body
+
+    const updateableFields = {
+      ...(nombre && { nombre }),
+      ...(wan && { wan }),
+      ...(puertaEnlace && { puertaEnlace }),
+      ...(observaciones && { observaciones }),
+      ...(area && { area }),
+   
+    }
+
+    if(Object.keys(camposActualizables). length === 0) {
+      return res.status(400).json({
+         message: "No se enviaron campos validos"
+      })
+    }
+
+    const routerActualizado = await Router.findByIdAndUpdate(id, updateableFields, {
+      new: true,
+    })
+
+    if(!routerActualizado){
+      return res.status(404).json({ message: "Router no encontrado"})
+    }
+
+    return res.status(200).json({
+      message: "Router actualizado correctamente",
+      router: routerActualizado
+    })
+
+  } catch (error) {
+    console.error("Error al actualizar Router: ", error)
+    return res.status(500).json({ message: "Error interno del servidor", error: error.message})
+  }
+}
