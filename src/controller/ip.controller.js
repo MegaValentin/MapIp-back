@@ -114,6 +114,12 @@ export const generateIPs = async (req, res) => {
   }
 
   try {
+    const gateway = await Ip.findOne({ puertaEnlace })
+
+    if(gateway){
+      return res.status(400).json({meesage: "Ya se generaron IPs con esta puerta de enlace"})
+    }
+
     const subnet = ip.cidrSubnet(redCidr);
     const start = ip.toLong(subnet.firstAddress);
     const end = ip.toLong(subnet.lastAddress);
@@ -141,7 +147,8 @@ export const generateIPs = async (req, res) => {
 
     await Ip.insertMany(ips, { ordered: false });
     res.status(201).json({ message: `Se generaron ${ips.length} Ips` });
-  } catch (error) {
+    console.log(`Se generaron ${ips.length} Ips`)
+    } catch (error) {
     console.error("Error al generar IPs: ", error.message);
     res
       .status(500)
