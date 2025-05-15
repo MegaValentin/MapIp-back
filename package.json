@@ -11,8 +11,12 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+<<<<<<< HEAD
     "bcryptjs": "^3.0.2",
     "cookie-parser": "^1.4.7",
+=======
+    "bcrypt": "^6.0.0",
+>>>>>>> fdf48ac2287ca0339b374ea1d5739395de51a69f
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "exceljs": "^4.4.0",
@@ -21,7 +25,11 @@
     "ip": "^2.0.1",
     "ip-cidr": "^4.0.2",
     "jsonwebtoken": "^9.0.2",
+<<<<<<< HEAD
     "mongoose": "^8.14.3",
+=======
+    "mongoose": "^8.13.2",
+>>>>>>> fdf48ac2287ca0339b374ea1d5739395de51a69f
     "morgan": "^1.10.0",
     "xlsx": "^0.18.5",
     "zod": "^3.24.4"
