@@ -12,25 +12,27 @@ getIpsByGatewayPaginated } from "../controller/ip.controller.js";
 
 import { validateUpdate } from "../middleware/validator.updatedIp.js"
 import { validateMongoId } from "../middleware/validator.mongoId.js";
+import { authRequired } from "../middleware/validator.token.js";
+import { verifyRole } from "../middleware/validator.role.js"
 
 const router = Router()
 
-router.get('/ips',getIps)
+router.get('/ips', authRequired ,getIps)
 
-router.get('/ip/:id', getIp)
+router.get('/ip/:id', authRequired, getIp)
 
-router.get('/ips/gateway/:puertaEnlace', getIpsPuertasEnlaces)
+router.get('/ips/gateway/:puertaEnlace', authRequired, getIpsPuertasEnlaces)
 
-router.get('/ips/gatewayandstates', getIpsByStateAndGateway )
+router.get('/ips/gatewayandstates', authRequired, getIpsByStateAndGateway )
 
-router.get('/ips/filtradas', getIpsByGatewayPaginated)
+router.get('/ips/filtradas', authRequired, getIpsByGatewayPaginated)
 
-router.post('/addip', addIp)
+router.post('/addip', authRequired, verifyRole(['admin']), addIp)
 
-router.post('/generateip', generateIPs )
+router.post('/generateip', authRequired, verifyRole(['admin']), generateIPs )
 
-router.delete('/ips/:id', validateMongoId, deleteIp)
+router.delete('/ips/:id', authRequired, validateMongoId, verifyRole(['admin']), deleteIp)
 
-router.put('/ips/:id', validateUpdate, uploadIp)
+router.put('/ips/:id', validateUpdate, authRequired, uploadIp)
 
 export default router
