@@ -3,7 +3,15 @@ import { validateSchema } from "../middleware/validator.middleware.js";
 import { registerSchema, loginSchema } from "../schema/auth.schema.js";
 import { authRequired } from "../middleware/validator.token.js";
 import { verifyRole } from "../middleware/validator.role.js";
-import { registerUser, loginUser, logout, profile, getUser, deleteUser, verifyToken, authorizeUser } from "../controller/user.controller.js";
+import { registerUser, 
+    loginUser, 
+    logout, 
+    profile, 
+    getUser, 
+    deleteUser, 
+    verifyToken, 
+    authorizeUser,
+    updatedRole } from "../controller/user.controller.js";
 
 
 const router = Router()
@@ -25,5 +33,7 @@ router.get("/getuser", authRequired, verifyRole(['admin']), getUser)
 router.delete("/deleteuser/:id", authRequired, verifyRole(['admin']), deleteUser)
 
 router.patch("/authorize/:id", authRequired, verifyRole(['admin']), authorizeUser);
+
+router.put('/users/:id/role',authRequired, verifyRole(['admin']), updatedRole)
 
 export default router

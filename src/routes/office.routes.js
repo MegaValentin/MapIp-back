@@ -17,7 +17,7 @@ router.get('/office/:id', authRequired, getOffice)
 
 router.put('/office/:id', authRequired, updatedOffice)
 
-router.delete('/office/:id', authRequired, verifyRole(['admin']), deleteOffice)
+router.delete('/office/:id', authRequired, verifyRole(['admin', 'user']), deleteOffice)
 
 router.post('/addoffice', authRequired,  addOffice)
 

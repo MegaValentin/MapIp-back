@@ -1,5 +1,8 @@
 import { Router } from "express"
-import { getIpsByRouter, createRouter, deleteRouter, updatedRouter } from "../controller/router.controller.js"
+import { getIpsByRouter, 
+    createRouter, 
+    deleteRouter, 
+    updatedRouter } from "../controller/router.controller.js"
 import { validateUpdateRouter } from "../middleware/validator.updatedRouter.js"
 import { authRequired } from "../middleware/validator.token.js"
 import { verifyRole } from "../middleware/validator.role.js"

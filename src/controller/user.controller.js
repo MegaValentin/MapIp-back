@@ -10,19 +10,21 @@ dotenv.config();
 const jwtSecret = process.env.JWT_SECRET;
 
 export const registerUser = async (req, res) => {
-    const { username, legajo, password, role, authorized } = req.body
+    const { username, legajo, password, role } = req.body
 
     try {
         const userFound = await User.findOne({ $or: [{ legajo }, { username }] })
         if(userFound) return res.status(400).json([ 'The username is already in use'])
 
         const hashedPassword = await bcrypt .hash(password, 10)
-        const newUser = new User({username, legajo, password: hashedPassword, role, authorized})
+        const newUser = new User({username,
+            legajo,
+            password: hashedPassword,
+            role,
+            authorized: false})
 
         const userSaved = await newUser.save()
-        const token = await createAccessToken({id: userSaved._id})
 
-        res.cookie("token", token)
         res.status(201).json({
             id: userSaved._id,
             username: userSaved.username,
@@ -151,6 +153,36 @@ export const authorizeUser = async (req, res) => {
     } catch (error) {
         console.error("Error la autorizar usuario: ", error)
         res.status(500).json({ message: "Error al autorizar usuario"})
+    }
+}
+
+export const updatedRole = async (req, res) => {
+    const { id } = req.params
+    const { role } = req.body
+
+    const allwedRoles = ["admin", "user"]
+    if(!allwedRoles.icludes(role)){
+        return res.status(400).json({ message: "Invalid role. Allowed roles are 'admin' or 'user' "})
+
+    }
+
+    try {
+        const user = await User.findById(id)
+        if(!user) return res.status(404).json({ message: "User not found"})
+
+        user.role = role
+        await user.seve()
+
+        res.json({
+            message: "User role updated successfully",
+            user: {
+                id: user._id,
+                username: user.username,
+                role: user.role
+            }
+        })
+    } catch (error) {
+        res.status(500).json({ message: error.message})
     }
 }
     
