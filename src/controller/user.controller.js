@@ -10,7 +10,7 @@ dotenv.config();
 const jwtSecret = process.env.JWT_SECRET;
 
 export const registerUser = async (req, res) => {
-    const { username, legajo, password, role } = req.body
+    const { username, legajo, password } = req.body
 
     try {
         const userFound = await User.findOne({ $or: [{ legajo }, { username }] })
@@ -20,7 +20,6 @@ export const registerUser = async (req, res) => {
         const newUser = new User({username,
             legajo,
             password: hashedPassword,
-            role,
             authorized: false})
 
         const userSaved = await newUser.save()
