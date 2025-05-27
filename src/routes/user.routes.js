@@ -21,10 +21,10 @@ router.post('/register',validateSchema(registerSchema), registerUser )
 router.post("/login", validateSchema(loginSchema), loginUser)
 
 router.post("/logout", logout)
-
+                
 router.get("/profile", authRequired , profile);
 
-router.get("/verify", verifyToken);
+router.get("/verify", verifyToken);                 
 
 //router.post("/adduser", validateSchema(registerSchema), authRequired, verifyRole(['admin']), addUser)
 

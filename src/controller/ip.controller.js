@@ -102,10 +102,6 @@ export const uploadIp = async (req, res) => {
   }
 };
 
-export const addIp = async (req, res) => {
-  res.send("Ruta funcionando");
-};
-
 export const generateIPs = async (req, res) => {
   const { puertaEnlace, redCidr } = req.body;
 
@@ -232,3 +228,7 @@ export const getIpsByGatewayPaginated = async (req, res) => {
     res.status(500).json({ message: 'Error al obtener IPs filtradas'})
   }
 }
+
+export const saludos = async (req, res) => {
+  res.json({ mensaje: "Hola mundo" });
+};  

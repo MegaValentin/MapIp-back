@@ -8,7 +8,7 @@ import dotenv from "dotenv"
 dotenv.config();
 
 const jwtSecret = process.env.JWT_SECRET;
-
+                
 export const registerUser = async (req, res) => {
     const { username, legajo, password } = req.body
 
@@ -39,6 +39,7 @@ export const registerUser = async (req, res) => {
 
 export const loginUser = async (req, res) => {
     const { legajo, password } = req.body
+    console.log("Body recibido en loginUser:", req.body);
 
     try {
         const userFound = await User.findOne({ legajo })
@@ -53,7 +54,7 @@ export const loginUser = async (req, res) => {
         
         const token = await createAccessToken({id: userFound._id})
 
-        res.cookie("token", token)
+        res.cookie("token", token)              
         res.json({
             id: userFound._id,
             username: userFound.username,
