@@ -195,40 +195,46 @@ export const getIpsByStateAndGateway  = async (req, res ) => {
 
 export const getIpsByGatewayPaginated = async (req, res) => {
   try {
-    const { puertaEnlace } = req.query
+    const { puertaEnlace } = req.query;
 
-    const page = parseInt(req.query.page) || 1
-    const limit = parseInt(req.query.limit) || 10
-    const skip = (page - 1 ) * limit
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
 
-    const filter = {}
-
-    if(puertaEnlace){
-      filter.puertaEnlace = puertaEnlace
+    const filter = {};
+    if (puertaEnlace) {
+      filter.puertaEnlace = puertaEnlace;
     }
 
-    const [total, ips] = await Promise.all([
-      Ip.countDocuments(filter),
-      Ip.find(filter)
-        .skip(skip)
-        .limit(limit)
-        .sort({ direccion: 1 })
-    ])
+    // 1. Obtener todas las IPs filtradas
+    const allIps = await Ip.find(filter);
+
+    // 2. Ordenarlas correctamente por dirección IP
+    const sortIps = allIps.sort((a, b) => {
+      const ipA = a.direccion.split('.').map(Number);
+      const ipB = b.direccion.split('.').map(Number);
+      return (
+        ipA[0] - ipB[0] ||
+        ipA[1] - ipB[1] ||
+        ipA[2] - ipB[2] ||
+        ipA[3] - ipB[3]
+      );
+    });
+
+    // 3. Paginar manualmente
+    const paginatedIps = sortIps.slice(skip, skip + limit);
 
     res.status(200).json({
-      total,
+      total: allIps.length,
       page,
-      totalPages: Math.ceil(total/limit),
-      data:ips
-
-    })
-
+      limit,
+      totalPages: Math.ceil(allIps.length / limit),
+      hasNextPage: page < Math.ceil(allIps.length / limit),
+      data: paginatedIps,
+    });
   } catch (error) {
-    cosole.error('Error al obtener IPs filtradas: ', error.message)
-    res.status(500).json({ message: 'Error al obtener IPs filtradas'})
+    console.error('Error al obtener IPs filtradas: ', error.message);
+    res.status(500).json({ message: 'Error al obtener IPs filtradas' });
   }
 }
 
-export const saludos = async (req, res) => {
-  res.json({ mensaje: "Hola mundo" });
-};  

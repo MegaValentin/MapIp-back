@@ -7,8 +7,8 @@ uploadIp,
 generateIPs,
 getIpsPuertasEnlaces,
 getIpsByStateAndGateway,
-getIpsByGatewayPaginated,
-saludos } from "../controller/ip.controller.js";
+getIpsByGatewayPaginated
+ } from "../controller/ip.controller.js";
 
 import { validateUpdate } from "../middleware/validator.updatedIp.js"
 import { validateMongoId } from "../middleware/validator.mongoId.js";
@@ -17,7 +17,7 @@ import { verifyRole } from "../middleware/validator.role.js"
 
 const router = Router()
 
-router.get('/saludos', saludos)
+
 
 router.get('/ips', authRequired ,getIps)
 
