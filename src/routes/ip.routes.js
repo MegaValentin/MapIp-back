@@ -7,7 +7,8 @@ uploadIp,
 generateIPs,
 getIpsPuertasEnlaces,
 getIpsByStateAndGateway,
-getIpsByGatewayPaginated
+getIpsByGatewayPaginated,
+getUniqueGateways
  } from "../controller/ip.controller.js";
 
 import { validateUpdate } from "../middleware/validator.updatedIp.js"
@@ -28,6 +29,8 @@ router.get('/ips/gateway/:puertaEnlace', authRequired, getIpsPuertasEnlaces)
 router.get('/ips/gatewayandstates', authRequired, getIpsByStateAndGateway )
 
 router.get('/ips/filtradas', authRequired, getIpsByGatewayPaginated)
+
+router.get('/gateways', authRequired, getUniqueGateways)
 
 router.post('/generateip', authRequired, verifyRole(['admin']), generateIPs )
 

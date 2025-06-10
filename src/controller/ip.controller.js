@@ -238,3 +238,12 @@ export const getIpsByGatewayPaginated = async (req, res) => {
   }
 }
 
+export const getUniqueGateways = async (req, res) => {
+  try {
+    const gateways = await Ip.distinct('puertaEnlace')
+    res.status(200).json({gateways})
+  } catch (error) {
+    console.error('Error al obtener puertas de enlace unicas: ', error.message)
+    res.status(500).json({ message: "Error al obtener puertas de enlace unicas"})
+  }
+}
