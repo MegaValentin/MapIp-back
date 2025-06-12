@@ -8,8 +8,8 @@ generateIPs,
 getIpsPuertasEnlaces,
 getIpsByStateAndGateway,
 getIpsByGatewayPaginated,
-getUniqueGateways
- } from "../controller/ip.controller.js";
+getUniqueGateways,
+deleteIPsByGateway } from "../controller/ip.controller.js";
 
 import { validateUpdate } from "../middleware/validator.updatedIp.js"
 import { validateMongoId } from "../middleware/validator.mongoId.js";
@@ -35,6 +35,8 @@ router.get('/gateways', authRequired, getUniqueGateways)
 router.post('/generateip', authRequired, verifyRole(['admin']), generateIPs )
 
 router.delete('/ips/:id', authRequired, validateMongoId, verifyRole(['admin']), deleteIp)
+
+router.delete('/removegateways', authRequired, verifyRole(['admin']), deleteIPsByGateway)
 
 router.put('/ips/:id', validateUpdate, authRequired, uploadIp)
 

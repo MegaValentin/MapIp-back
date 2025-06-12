@@ -152,6 +152,25 @@ export const generateIPs = async (req, res) => {
   }
 };
 
+export const deleteIPsByGateway = async (req, res) => {
+  const { puertaEnlace } = req.body;
+
+  if (!puertaEnlace) {
+    return res.status(400).json({ message: "Se requiere la puerta de enlace a eliminar" });
+  }
+
+  try {
+    const resultado = await Ip.deleteMany({ puertaEnlace });
+
+    res.status(200).json({
+      message: `Se eliminaron ${resultado.deletedCount} IPs con la puerta de enlace ${puertaEnlace}`,
+    });
+  } catch (error) {
+    console.error("Error al eliminar IPs:", error.message);
+    res.status(500).json({ message: "Error al eliminar IPs", error: error.message });
+  }
+};
+
 export const getIpsPuertasEnlaces = async (req, res) => {
     try {
         const { puertaEnlace } = req.params
