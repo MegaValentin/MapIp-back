@@ -25,15 +25,12 @@ const ipSchema = new mongoose.Schema({
         default: false
     },
     ultimaDeteccion: Date,
-    isRouter: {
-        type: Boolean,
-        default: false
-    },
-    router: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Router', 
+    equipo: {
+        type:String,
+        enum: ["computadora","router", "impresora", "servidor"],
         default: null
-    }
+    } 
+
     
 }, {timestamps: true})
 
