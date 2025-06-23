@@ -61,20 +61,24 @@ export const uploadIp = async (req, res) => {
       estado,
       hostname,
       mac,
+      area,
       asignadaA,
       observaciones,
       detectada,
       ultimaDeteccion,
+      equipo,
     } = req.body;
 
     const camposActualizables = {
       ...(estado && { estado }),
       ...(hostname && { hostname }),
       ...(mac && { mac }),
+      ...(area && { area }),
       ...(asignadaA && { asignadaA }),
       ...(observaciones && { observaciones }),
       ...(detectada !== undefined && { detectada }),
       ...(ultimaDeteccion && { ultimaDeteccion }),
+      ...(equipo && { equipo})
     };
 
     if (Object.keys(camposActualizables).length === 0) {
@@ -83,6 +87,7 @@ export const uploadIp = async (req, res) => {
 
     const ipActualizada = await Ip.findByIdAndUpdate(id, camposActualizables, {
       new: true,
+      runValidators: false 
     });
 
     if (!ipActualizada) {
@@ -96,6 +101,13 @@ export const uploadIp = async (req, res) => {
 
   } catch (error) {
     console.error("Error al actulizar IP: ", error);
+
+    if (error.code === 11000 && error.keyPattern?.mac) {
+      return res.status(400).json({
+        error: [{ campo: "mac", mensaje: "Esta dirección MAC ya está registrada" }]
+      });
+    }
+    
     return res
       .status(500)
       .json({ message: "Error interno  del servidor", error: error.message });

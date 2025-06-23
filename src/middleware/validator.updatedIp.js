@@ -1,9 +1,7 @@
-import { body,param, validationResult } from "express-validator";
+import { body, param, validationResult } from "express-validator";
 
 export const validateUpdate = [
-  param("id")
-    .isMongoId()
-    .withMessage("El ID enviado no es un ObjectId válido"),
+  param("id").isMongoId().withMessage("El ID enviado no es un ObjectId válido"),
 
   body("estado")
     .optional()
@@ -17,15 +15,19 @@ export const validateUpdate = [
 
   body("mac")
     .optional()
+    .trim()
     .matches(/^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/)
-    .withMessage("MAC address inválida"),
-
+    .withMessage("La dirección MAC debe tener el formato XX:XX:XX:XX:XX:XX"),
+  body("area")
+    .optional()
+    .isString()
+    .withMessage("El campo área debe ser un texto"),
   body("asignadaA")
     .optional()
     .isString()
     .withMessage("El campo asignadaA debe ser un texto"),
 
-  body("obsevaciones")
+  body("observaciones")
     .optional()
     .isString()
     .withMessage("El campo observaciones debe ser un texto"),

@@ -9,7 +9,7 @@ const ipSchema = new mongoose.Schema({
     marcaraSubRed: String,
     puertaEnlace: {
         type:String,
-        required: true
+        
     },
     estado: {
         type: String,
@@ -17,7 +17,11 @@ const ipSchema = new mongoose.Schema({
         default: 'libre'
     },
     hostname: String,
-    mac: String,
+    mac: {
+        type: String,
+        unique: true,
+        sparse: true // 👈 Importante si algunas IPs no tienen MAC
+      },
     area: String,
     observaciones: String,
     detectada: {
