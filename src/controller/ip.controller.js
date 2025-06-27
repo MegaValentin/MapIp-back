@@ -278,3 +278,24 @@ export const getUniqueGateways = async (req, res) => {
     res.status(500).json({ message: "Error al obtener puertas de enlace unicas"})
   }
 }
+
+export const ipGateways = async (req, res) => {
+  const { puertaEnlace, estado} = req.query
+
+  if(!puertaEnlace || !estado) {
+    return res.status(400).json({
+      error: "Faltan parametros"
+    })
+  }
+
+  try {
+    const freeIp = await Ip.find({
+      puertaEnlace,
+      estado
+    })
+    res.json(freeIp)
+  } catch (error) {
+    console.error("Error al obtener las Ips libre: ", error)
+    res.status(500).json({ error: 'Error al obtener IPs libres'})
+  }
+}
