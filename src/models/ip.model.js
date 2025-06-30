@@ -16,7 +16,10 @@ const ipSchema = new mongoose.Schema({
         enum: ['libre', 'ocupada', 'conflicto'],
         default: 'libre'
     },
-    hostname: String,
+    hostname: { 
+        type: String,
+        unique: true,
+        sparse: true },
     mac: {
         type: String,
         unique: true,
