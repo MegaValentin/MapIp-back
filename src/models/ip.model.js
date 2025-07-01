@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
 
+const { Schema } = mongoose;
+
 const ipSchema = new mongoose.Schema({
     direccion : {
         type: String,
@@ -23,9 +25,12 @@ const ipSchema = new mongoose.Schema({
     mac: {
         type: String,
         unique: true,
-        sparse: true // 👈 Importante si algunas IPs no tienen MAC
+        sparse: true 
       },
-    area: String,
+    area: {
+        type: Schema.Types.ObjectId,
+        ref: 'Office'
+    },
     observaciones: String,
     detectada: {
         type: Boolean,

@@ -1,4 +1,6 @@
 import Office from "../models/office.model.js"
+import xlsx from 'xlsx';
+import fs from 'fs';
 
 export const getOffices = async (req, res) => {
     try {
@@ -120,10 +122,8 @@ export const addAllOffice = async (req, res) => {
         const worksheet = officebook.Sheets[sheetName]
         const data = xlsx.utils.sheet_to_json(worksheet)
 
-        console.log(data)
-
         const newOffice = data.map((row) => ({
-            area:row.Area,
+            area:row.area,
         }))
 
         await Office.insertMany(newOffice)
@@ -131,6 +131,34 @@ export const addAllOffice = async (req, res) => {
 
         res.status(200).json({message: 'Arear agregadas correctamente'})
     } catch (error) {
+        console.error("Error al procesar el archivo excel: ", error)
         res.status(500).json({error:error.message})
+    }
+}
+
+export const getPaginatedOffices = async (req, res) => {
+    const page = parseInt(req.query.page) || 1
+    const limit = parseInt(req.query.limit) || 10
+
+    const skip = (page - 1) * limit
+
+    try {
+        const [ offices, total ] = await Promise.all([
+            Office.find().sort({area: 1}).skip(skip).limit(limit),
+            Office.countDocuments()
+        ])
+
+        const totalPages = Math.ceil(total / limit )
+
+        res.json({
+            data:offices,
+            currentPage: page,
+            totalPages,
+            totalItems: total
+        })
+
+    } catch (error) {
+        console.error("Error al obtener areas paginadas", error)
+        res.status(500).json({ message: "Error en el servidor"})
     }
 }

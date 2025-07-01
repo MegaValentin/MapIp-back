@@ -10,7 +10,8 @@ getIpsByStateAndGateway,
 getIpsByGatewayPaginated,
 getUniqueGateways,
 deleteIPsByGateway,
-ipGateways } from "../controller/ip.controller.js";
+ipGateways,
+getIpCountByOffice } from "../controller/ip.controller.js";
 
 import { validateUpdate } from "../middleware/validator.updatedIp.js"
 import { validateMongoId } from "../middleware/validator.mongoId.js";
@@ -34,6 +35,8 @@ router.get('/ips/filtradas', authRequired, getIpsByGatewayPaginated)
 router.get('/gateways', authRequired, getUniqueGateways)
 
 router.get('/lengthips', authRequired, ipGateways)
+
+router.get('/ips/offices', authRequired, getIpCountByOffice )
 
 router.post('/generateip', authRequired, verifyRole(['admin']), generateIPs )
 

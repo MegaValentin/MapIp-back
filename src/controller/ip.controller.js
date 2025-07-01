@@ -299,3 +299,18 @@ export const ipGateways = async (req, res) => {
     res.status(500).json({ error: 'Error al obtener IPs libres'})
   }
 }
+
+export const getIpCountByOffice = async (req, res) => {
+  try {
+    const results = await Ip.aggregate([
+      { $match: { estado: "ocupada", area: { $ne: null } } },
+      { $group: { _id: "$area", cantidad: { $sum: 1 } } },
+      { $sort: { cantidad: -1 } },
+    ]);
+
+    res.json(results);
+  } catch (error) {
+    console.error("Error al obtener Ips por area: ", error)
+    res.status(500).json({ error: "Error al contar Ips por area"})
+  }
+}
