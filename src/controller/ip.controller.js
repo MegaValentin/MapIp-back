@@ -1,5 +1,6 @@
 import ip from "ip";
 import Ip from "../models/ip.model.js";
+import mongoose from "mongoose";
 
 export const getIps = async (req, res) => {
   try {
@@ -81,13 +82,13 @@ export const uploadIp = async (req, res) => {
       ...(equipo && { equipo})
     };
 
-    if (Object.keys(camposActualizables).length === 0) {
-      return res.status(400).json({ message: "No se enviaron campos validos" });
+    if (area && !mongoose.Types.ObjectId.isValid(area)) {
+      return res.status(400).json({ message: "ID de área inválido" });
     }
 
     const ipActualizada = await Ip.findByIdAndUpdate(id, camposActualizables, {
       new: true,
-      runValidators: false 
+      runValidators: true 
     });
 
     if (!ipActualizada) {
@@ -238,7 +239,7 @@ export const getIpsByGatewayPaginated = async (req, res) => {
     }
 
     // 1. Obtener todas las IPs filtradas
-    const allIps = await Ip.find(filter);
+    const allIps = await Ip.find(filter).populate("area", "area");
 
     // 2. Ordenarlas correctamente por dirección IP
     const sortIps = allIps.sort((a, b) => {
@@ -303,14 +304,67 @@ export const ipGateways = async (req, res) => {
 export const getIpCountByOffice = async (req, res) => {
   try {
     const results = await Ip.aggregate([
-      { $match: { estado: "ocupada", area: { $ne: null } } },
-      { $group: { _id: "$area", cantidad: { $sum: 1 } } },
-      { $sort: { cantidad: -1 } },
+      {
+        $match: {
+          estado: "ocupada",
+          area: { $ne: null }
+        }
+      },
+      {
+        $lookup: {
+          from: "offices", 
+          localField: "area",
+          foreignField: "_id",
+          as: "office"
+        }
+      },
+      {
+        $unwind: "$office"
+      },
+      {
+        $group: {
+          _id: "$area",
+          area: { $first: "$office.area" },
+          cantidad: { $sum: 1 },
+          ips: {
+            $push: {
+              direccion: "$direccion",
+              hostname: "$hostname",
+              mac: "$mac",
+              observaciones: "$observaciones",
+              equipo: "$equipo"
+            }
+          }
+        }
+      },
+      {
+        $sort: { cantidad: -1 }
+      }
     ]);
 
     res.json(results);
   } catch (error) {
-    console.error("Error al obtener Ips por area: ", error)
-    res.status(500).json({ error: "Error al contar Ips por area"})
+    console.error("Error al obtener Ips por área: ", error);
+    res.status(500).json({ error: "Error al contar o listar IPs por área" });
+  }
+};
+
+export const getIpsByOffices = async (req, res) => {
+  try {
+    const { officeId } = req.params
+
+    if(!officeId || officeId.length !== 24){
+      return res.status(400).json({ message: "Id de área invalido"})
+    }
+
+    const ips = await Ip.find({ area: officeId, estado:"ocupada"})
+
+    res.json({
+      cantidad: ips.length,
+      ips
+    })
+  } catch (error) {
+    console.error("Error al obtener IPs por área: ", error)
+    res.status(500).json({ message: "Error interno del servidor"})
   }
 }
