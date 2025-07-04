@@ -1,6 +1,8 @@
 import ip from "ip";
 import Ip from "../models/ip.model.js";
 import mongoose from "mongoose";
+import ping from 'ping';
+import os from "os"
 
 export const getIps = async (req, res) => {
   try {
@@ -366,5 +368,50 @@ export const getIpsByOffices = async (req, res) => {
   } catch (error) {
     console.error("Error al obtener IPs por área: ", error)
     res.status(500).json({ message: "Error interno del servidor"})
+  }
+}
+
+export const scanIpByOffice = async (req, res) => {
+  try {
+    const { officeId } = req.params;
+
+    const isWindows = os.platform() === 'win32'; //verifico el sistema operativo
+
+    if (!officeId || officeId.length !== 24) {
+      return res.status(400).json({ message: 'ID de oficina inválido' });
+    }
+    // Buscar todas las IPs asociadas al área
+    const ips = await Ip.find({ area: officeId });
+
+    const results = [];
+
+    for (const ip of ips) {
+      const result = await ping.promise.probe(ip.direccion, {
+        timeout: 2,
+        extra: [isWindows ? '-n' : '-c', '3'], 
+      });
+
+      console.log("Escanenando IP:", ip.direccion);
+      console.log("Resultado:", result);
+      const estaActiva = result.alive;
+
+      await Ip.findByIdAndUpdate(ip._id, {
+        detectada: estaActiva,
+        ultimaDeteccion: new Date(),
+      });
+
+      results.push({
+        direccion: ip.direccion,
+        activa: estaActiva,
+      });
+    }
+
+    res.json({
+      message: 'Escaneo completado',
+      results,
+    });
+  } catch (error) {
+    console.error('Error al escanear IPs:', error);
+    res.status(500).json({ message: 'Error al escanear IPs' });
   }
 }

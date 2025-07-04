@@ -13,7 +13,8 @@ deleteIPsByGateway,
 ipGateways,
 getIpCountByOffice,
 getIpsByOffices,
- } from "../controller/ip.controller.js";
+scanIpByOffice
+} from "../controller/ip.controller.js";
 
 import { validateUpdate } from "../middleware/validator.updatedIp.js"
 import { validateMongoId } from "../middleware/validator.mongoId.js";
@@ -41,6 +42,8 @@ router.get('/lengthips', authRequired, ipGateways)
 router.get('/ips/offices', authRequired, getIpCountByOffice )
 
 router.get('/ips/by-office/:officeId', authRequired, getIpsByOffices)
+
+router.get('/scan/office/:officeId', authRequired, scanIpByOffice)
 
 router.post('/generateip', authRequired, verifyRole(['admin']), generateIPs )
 
