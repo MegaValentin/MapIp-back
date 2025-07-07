@@ -390,11 +390,7 @@ export const scanIpByOffice = async (req, res) => {
         timeout: 2,
         extra: [isWindows ? '-n' : '-c', '3'], 
       });
-
-      console.log("Escanenando IP:", ip.direccion);
-      console.log("Resultado:", result);
       const estaActiva = result.alive;
-
       await Ip.findByIdAndUpdate(ip._id, {
         detectada: estaActiva,
         ultimaDeteccion: new Date(),
@@ -413,5 +409,42 @@ export const scanIpByOffice = async (req, res) => {
   } catch (error) {
     console.error('Error al escanear IPs:', error);
     res.status(500).json({ message: 'Error al escanear IPs' });
+  }
+}
+
+export const scanSingleIp = async (req, res) => {
+  try { 
+    const { ipId } = req.params
+    const ip = await Ip.findById(ipId)
+    
+    if(!ip){
+      return res.status(404).json({
+        message: "Ip no encontrada"
+      })
+    }
+    
+    const isWindows = os.platform() === 'win32'
+    
+    const result = await ping.promise.probe(ip.direccion, {
+      timeout: 2,
+      extra: [isWindows ? '-n' : '-c', '3'], 
+    });
+
+    const isActive = result.alive
+
+    await Ip.findByIdAndUpdate(ipId, {
+      detected: isActive,
+      lastDetection: new Date()
+    })
+
+    res.json({
+      message: "Escaneo completo",
+      direccion: ip.direccion,
+      activa: isActive,
+      resultado: result.output
+    })
+  } catch (error) {
+    console.error("Error al escanear IP: ", error)
+    res.status(500).json({ message: "Error al escanear IP"})
   }
 }

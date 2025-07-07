@@ -13,7 +13,8 @@ deleteIPsByGateway,
 ipGateways,
 getIpCountByOffice,
 getIpsByOffices,
-scanIpByOffice
+scanIpByOffice,
+scanSingleIp
 } from "../controller/ip.controller.js";
 
 import { validateUpdate } from "../middleware/validator.updatedIp.js"
@@ -44,6 +45,8 @@ router.get('/ips/offices', authRequired, getIpCountByOffice )
 router.get('/ips/by-office/:officeId', authRequired, getIpsByOffices)
 
 router.get('/scan/office/:officeId', authRequired, scanIpByOffice)
+
+router.get('/scan/ips/:ipId', authRequired , scanSingleIp)
 
 router.post('/generateip', authRequired, verifyRole(['admin']), generateIPs )
 
