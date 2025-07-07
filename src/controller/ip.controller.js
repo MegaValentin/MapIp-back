@@ -1,8 +1,9 @@
-import ip from "ip";
 import Ip from "../models/ip.model.js";
 import mongoose from "mongoose";
 import ping from 'ping';
 import os from "os"
+import { exec } from "child_process";
+import util from "util";
 
 export const getIps = async (req, res) => {
   try {
@@ -446,5 +447,61 @@ export const scanSingleIp = async (req, res) => {
   } catch (error) {
     console.error("Error al escanear IP: ", error)
     res.status(500).json({ message: "Error al escanear IP"})
+  }
+}
+
+const execPromise = util.promisify(exec);
+export const scanIpAndMac = async (req, res) => {
+  try {
+    const { ipId } = req.params
+    const ip = await Ip.findById(ipId)
+    
+    if(!ip){
+      return res.status(404).json({
+        message: "Ip no encontrada"
+      })
+    }
+
+    // Verifica si la IP está activa
+    const isWindows = os.platform() === "win32";
+
+    const pingResult = await ping.promise.probe(ip.direccion, {
+      timeout: 2,
+      extra: [isWindows ? "-n" : "-c", "1"],
+    });
+
+    if (!pingResult.alive) {
+      return res.json({
+        direccion: ip.direccion,
+        activa: false,
+        mac: null,
+        mensaje: "Host no activo",
+      });
+    }
+
+    await execPromise(isWindows ? `ping -n 1 ${ip.direccion}` : `ping -c 1 ${ip.direccion}`);
+    
+    // Ejecutar arp para obtener la MAC
+    const arpCommand = isWindows
+      ? `arp -a ${ip.direccion}`
+      : `arp ${ip.direccion}`;
+
+    const { stdout } = await execPromise(arpCommand);
+
+    // Extraer la MAC address del resultado
+    const macRegex = /([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})/;
+    const match = stdout.match(macRegex);
+    const mac = match ? match[0] : null;
+
+    console.log(mac)
+    return res.json({
+      direccion: ip.direccion,
+      activa: true,
+      mac,
+      mensaje: mac ? "MAC obtenida con éxito" : "MAC no encontrada",
+    });
+  } catch (error) {
+    console.error("Error al escanear IP y MAC:", error);
+    return res.status(500).json({ message: "Error al escanear IP y MAC" });
   }
 }

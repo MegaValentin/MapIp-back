@@ -14,7 +14,8 @@ ipGateways,
 getIpCountByOffice,
 getIpsByOffices,
 scanIpByOffice,
-scanSingleIp
+scanSingleIp,
+scanIpAndMac
 } from "../controller/ip.controller.js";
 
 import { validateUpdate } from "../middleware/validator.updatedIp.js"
@@ -47,6 +48,8 @@ router.get('/ips/by-office/:officeId', authRequired, getIpsByOffices)
 router.get('/scan/office/:officeId', authRequired, scanIpByOffice)
 
 router.get('/scan/ips/:ipId', authRequired , scanSingleIp)
+
+router.get("/scan/ips/mac/:ipId", authRequired, scanIpAndMac)
 
 router.post('/generateip', authRequired, verifyRole(['admin']), generateIPs )
 
