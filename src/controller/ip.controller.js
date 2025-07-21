@@ -1,3 +1,4 @@
+import ip from "ip"
 import Ip from "../models/ip.model.js";
 import mongoose from "mongoose";
 import ping from 'ping';
@@ -148,8 +149,6 @@ export const generateIPs = async (req, res) => {
         marcaraSubRed: subnet.subnetMask || "",
         puertaEnlace,
         estado: "libre",
-        hostname: "",
-        mac: "",
         asignadaA: "",
         obsevaciones: "",
         detectada: false,
@@ -480,7 +479,7 @@ export const scanIpAndMac = async (req, res) => {
     }
 
     await execPromise(isWindows ? `ping -n 1 ${ip.direccion}` : `ping -c 1 ${ip.direccion}`);
-    
+
     // Ejecutar arp para obtener la MAC
     const arpCommand = isWindows
       ? `arp -a ${ip.direccion}`
@@ -503,5 +502,82 @@ export const scanIpAndMac = async (req, res) => {
   } catch (error) {
     console.error("Error al escanear IP y MAC:", error);
     return res.status(500).json({ message: "Error al escanear IP y MAC" });
+  }
+}
+
+export const scanIpAndMacAndCompare = async (req, res) => {
+  try {
+    const { ipId } = req.params;
+    const ip = await Ip.findById(ipId);
+
+    if (!ip) {
+      return res.status(404).json({ message: "IP no encontrada" });
+    }
+
+    const isWindows = os.platform() === "win32";
+
+    // 1. Verificar si está activa
+    const pingResult = await ping.promise.probe(ip.direccion, {
+      timeout: 2,
+      extra: [isWindows ? "-n" : "-c", "1"],
+    });
+
+    if (!pingResult.alive) {
+      return res.json({
+        direccion: ip.direccion,
+        activa: false,
+        mac: null,
+        mensaje: "Host no activo",
+      });
+    }
+
+    // 2. Ejecutar un ping para que el host aparezca en la tabla ARP
+    await execPromise(isWindows ? `ping -n 1 ${ip.direccion}` : `ping -c 1 ${ip.direccion}`);
+
+    // 3. Ejecutar ARP
+    const arpCommand = isWindows
+      ? `arp -a ${ip.direccion}`
+      : `arp ${ip.direccion}`;
+    const { stdout } = await execPromise(arpCommand);
+
+    // 4. Extraer la MAC
+    const macRegex = /([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})/;
+    const match = stdout.match(macRegex);
+    const scannedMac = match ? match[0].toLowerCase() : null;
+
+    let updateData = {
+      detected: true,
+      lastDetection: new Date(),
+    };
+
+    let observacion = "";
+
+    if (scannedMac) {
+      if (!ip.mac) {
+        // No hay MAC en DB → la agregamos
+        updateData.mac = scannedMac;
+        updateData.estado = "ocupada"
+        observacion = "MAC asignada automáticamente desde escaneo.";
+      } else if (ip.mac.toLowerCase() !== scannedMac) {
+        // Hay MAC pero es diferente
+        updateData.estado = "conflicto";
+        observacion = `MAC conflictiva. Registrada: ${ip.mac}, Detectada: ${scannedMac}`;
+        updateData.observaciones = observacion;
+      }
+    }
+
+    await Ip.findByIdAndUpdate(ipId, updateData);
+
+    res.json({
+      direccion: ip.direccion,
+      activa: true,
+      macDetectada: scannedMac,
+      mensaje: scannedMac
+        ? observacion || "MAC verificada correctamente."
+        : "MAC no encontrada en escaneo.",
+    });
+  } catch (error) {
+    console.error("Error al escanear IP y MAC:", error);
+    res.status(500).json({ message: "Error al escanear IP y MAC" });
   }
 }
