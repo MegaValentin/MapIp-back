@@ -229,16 +229,25 @@ export const getIpsByStateAndGateway  = async (req, res ) => {
 
 export const getIpsByGatewayPaginated = async (req, res) => {
   try {
-    const { puertaEnlace } = req.query;
+    const { puertaEnlace, estado, equipo, area } = req.query;
 
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
-    const filter = {};
-    if (puertaEnlace) {
-      filter.puertaEnlace = puertaEnlace;
-    }
+    let filter = {
+      puertaEnlace,
+      estado,
+      area,
+      equipo
+    };
+    
+    // Eliminar campos undefined o vacíos
+    Object.keys(filter).forEach((key) => {
+      if (!filter[key]) {
+        delete filter[key];
+      }
+    });
 
     // 1. Obtener todas las IPs filtradas
     const allIps = await Ip.find(filter).populate("area", "area");
