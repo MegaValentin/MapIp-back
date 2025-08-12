@@ -1,10 +1,12 @@
 import ip from "ip"
 import Ip from "../models/ip.model.js";
+import RouterModel from "../models/router.model.js"
 import mongoose from "mongoose";
 import ping from 'ping';
 import os from "os"
 import { exec } from "child_process";
 import util from "util";
+import { Router } from "express";
 
 export const getIps = async (req, res) => {
   try {
@@ -97,7 +99,28 @@ export const uploadIp = async (req, res) => {
 
     if (!ipActualizada) {
       return res.status(404).json({ message: "Ip no encontrada" });
-    }
+    } 
+
+   if (ipActualizada.equipo === "router") {
+  // Traemos la IP actualizada con el área poblada
+  const ipConArea = await Ip.findById(ipActualizada._id).populate("area", "area");
+
+  const existeRouter = await RouterModel.findOne({ wan: ipConArea._id });
+
+  if (!existeRouter) {
+    await RouterModel.create({
+      nombre: `Router - ${ipConArea.area?.area || ipConArea.direccion}`,
+      wan: ipConArea._id,
+      userAdmin: "",
+      passAdmin: "",
+      lan: "",
+      ssid: "",
+      passSsid: "",
+      observaciones: "Registro creado automáticamente desde IP",
+      area: ipConArea.area?.area || null // Guardamos nombre del área
+    });
+  }
+}
 
     return res.status(200).json({
       message: "IP actulizada correctamente",

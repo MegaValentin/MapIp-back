@@ -8,15 +8,20 @@ const routerSchema = new mongoose.Schema({
         required: true,
         unique: true
     },
-    puertaEnlace: {
+    lan: {
         type:String,
-        required: true
+        
     },
+    userAdmin: String,
+    passAdmin: String,
     observaciones: String,
+    ssid: String,
+    passSsid: String,
     area: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Area'
+        type: String,
+        required: true,
+        trim: true
     }
 }, {timestamps: true})
 
-export default mongoose.model('Router', routerSchema)
+export default mongoose.model('RouterModel', routerSchema)

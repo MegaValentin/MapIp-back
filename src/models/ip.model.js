@@ -39,7 +39,7 @@ const ipSchema = new mongoose.Schema({
     ultimaDeteccion: Date,
     equipo: {
         type:String,
-        enum: ["computadora","router", "impresora", "servidor"],
+        enum: ["computadora","router", "impresora", "servidor", "reloj"],
         default: null
     } 
 
