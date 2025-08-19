@@ -1,180 +1,130 @@
-import Router from "../models/router.model.js";
+import RouterModel from "../models/router.model.js";
 import Ip from "../models/ip.model.js";
 
-import mongoose from "mongoose";
-import ip from "ip";
-
-
-export const getIpsByRouter = async (req, res) => {
-  const { id } = req.params;
-
+export const getRouters = async (req, res) => {
   try {
-    const router = await Router.findById(id);
-
-    if (!router) {
-      return res.status(404).json({ message: "Router no encontrado" });
-    }
-
-    const ips = await Ip.find({ puertaEnlace: router.puertaEnlace });
-
-    res.json({
-      router: router.nombre,
-      puertaEnlace: router.puertaEnlace,
-      cantidadIPs: ips.length,
-      ips,
-    });
+    const routers = await RouterModel.find();
+    res.json(routers);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Error al obtener las IPs del router" });
+    return res.status(500).json({
+      message: "Error al buscar los routers",
+    });
   }
 };
 
 export const createRouter = async (req, res) => {
-  const { nombre, wan, lanCidr, puertaEnlace, observaciones, area } = req.body;
-
-  // Validación básica
-  if (!lanCidr || !wan || !puertaEnlace) {
-    return res.status(400).json({ message: "Faltan datos obligatorios" });
-  }
-
-  // Validar que wan sea un ObjectId válido
-  if (!mongoose.Types.ObjectId.isValid(wan)) {
-    return res.status(400).json({ message: "ID de IP WAN no válido" });
-  }
-
   try {
-    const ipWan = await Ip.findById(wan)
-
-    if (!ipWan) {
-      return res.status(404).json({ message: "La IP WAN no existe" });
-    }
-
-    if (ipWan.estado !== "libre") {
-      return res.status(400).json({ message: "La IP WAN no está disponible" });
-    }
-
-    // Crear el router
-    const nuevoRouter = new Router({
+    const {
       nombre,
-      wan: ipWan._id,
-      puertaEnlace,
+      wan,
+      lan,
+      userAdmin,
+      passAdmin,
       observaciones,
-      area,
+      ssid,
+      passSsid,
+      area
+    } = req.body;
+
+    if (!wan) {
+      return res.status(400).json({ message: "La dirección WAN es obligatoria" });
+    }
+
+    let wanId = null;
+
+    // Buscar si la WAN corresponde a una IP registrada en nuestra BD
+    const ipFound = await Ip.findOne({ direccion: wan });
+
+    if (ipFound) {
+      // Verificar que no exista otro router usando esa misma IP interna
+      const existingRouter = await RouterModel.findOne({ wanId: ipFound._id });
+      if (existingRouter) {
+        return res.status(400).json({ message: "Ya existe un equipo con esa IP WAN interna" });
+      }
+
+      
+      if (ipFound.estado === "libre") {
+        ipFound.estado = "ocupada";
+        await ipFound.save();
+      }
+
+      wanId = ipFound._id;
+    }
+
+    const newRouter = await RouterModel.create({
+      nombre: nombre || `Router - ${area || wan}`,
+      wanId,             
+      wan,                
+      lan: lan || "",
+      userAdmin: userAdmin || "",
+      passAdmin: passAdmin || "",
+      ssid: ssid || "",
+      passSsid: passSsid || "",
+      observaciones: observaciones || "",
+      area: area || null
     });
 
-    await nuevoRouter.save();
+    return res.status(201).json({
+      message: "Router creado correctamente",
+      router: newRouter
+    });
 
-    // Actualizar la IP WAN
-    ipWan.estado = "ocupada";
-    ipWan.isRouter = true;
-    ipWan.router = nuevoRouter._id;
-    ipWan.observaciones = "${nombre}";
-
-    await ipWan.save();
-
-    const subnet = ip.cidrSubnet(lanCidr);
-    const start = ip.toLong(subnet.firstAddress);
-    const end = ip.toLong(subnet.lastAddress);
-    const gatewayLog = ip.toLong(puertaEnlace);
-
-    const ips = [];
-
-    for (let i = start; i <= end; i++) {
-      const direccion = ip.fromLong(i);
-
-      if (i === gatewayLog) continue;
-      ips.push({
-        direccion,
-        marcaraSubRed: subnet.subnetMask,
-        puertaEnlace,
-        estado: "libre",
-        area,
-        router: nuevoRouter._id,
-      });
-    }
-
-    await Ip.insertMany(ips, { ordered: false });
-
-    res
-      .status(201)
-      .json({ message: "Router creado correctamente", router: nuevoRouter });
   } catch (error) {
     console.error("Error al crear router:", error);
-    res.status(500).json({ message: "Error interno al crear el router" });
+    return res.status(500).json({
+      message: "Error interno del servidor",
+      error: error.message
+    });
   }
 };
 
 export const deleteRouter = async (req, res) => {
-  const { id } = req.params;
-
   try {
-    const router = await Router.findById(id);
+    const { id } = req.params;
 
-    if (!router) {
-      return res.status(404).json({ message: "Router no encontrado" });
+    const routerFound = await RouterModel.findById(id).populate("wan");
+
+    if (!routerFound) {
+      return res
+        .status(404)
+        .json({ message: "No se encontró el router para eliminar" });
+    }
+    const associatedIP = routerFound.wan;
+
+    const routerDelete = await RouterModel.findByIdAndDelete(id);
+
+    if (associatedIP) {
+      const ipUpdate = {
+        estado: "libre",
+        marcaraSubRed: "",
+        puertaEnlace: "",
+        hostname: null,
+        mac: null,
+        area: null,
+        observaciones: "",
+        detectada: false,
+        ultimaDeteccion: null,
+        equipo: null,
+      };
+
+      await Ip.findByIdAndUpdate(associatedIP._id, ipUpdate, { new: true });
     }
 
-    await Ip.findByIdAndUpdate(router.wan, {
-      estado: "libre",
-      observaciones: "",
-      isRouter: false,
+    if (!routerDelete) {
+      return res
+        .status(404)
+        .json({ message: "No se encontro el router para eliminar" });
+    }
+
+    return res.json({
+      message: "Router eliminado correctamente",
+      router: routerDelete,
     });
-
-    await Router.findByIdAndDelete(id);
-
-    res.status(200).json({ message: "Router elimando correctanemte" });
   } catch (error) {
     console.error("Error al eliminar el router: ", error.message);
-    res.status(500).json({ message: "Error al eliminar el router" });
+    return res.status(500).json({
+      message: "Error al eliminar el router: ",
+      error: error,
+    });
   }
 };
-
-export const updatedRouter = async (req, res) => {
-  try {
-    const { id } = req.params
-
-    if(!id || id.length !== 24) {
-      return res.status(400).json({ message: "ID inválido"})
-    }
-
-    const {
-      nombre,
-      wan,
-      puertaEnlace,
-      observaciones,
-      area
-    } = req.body
-
-    const updateableFields = {
-      ...(nombre && { nombre }),
-      ...(wan && { wan }),
-      ...(puertaEnlace && { puertaEnlace }),
-      ...(observaciones && { observaciones }),
-      ...(area && { area }),
-   
-    }
-
-    if(Object.keys(camposActualizables). length === 0) {
-      return res.status(400).json({
-         message: "No se enviaron campos validos"
-      })
-    }
-
-    const routerActualizado = await Router.findByIdAndUpdate(id, updateableFields, {
-      new: true,
-    })
-
-    if(!routerActualizado){
-      return res.status(404).json({ message: "Router no encontrado"})
-    }
-
-    return res.status(200).json({
-      message: "Router actualizado correctamente",
-      router: routerActualizado
-    })
-
-  } catch (error) {
-    console.error("Error al actualizar Router: ", error)
-    return res.status(500).json({ message: "Error interno del servidor", error: error.message})
-  }
-}

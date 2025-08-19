@@ -1,12 +1,16 @@
 import mongoose from "mongoose";
+const { Schema } = mongoose;
 
 const routerSchema = new mongoose.Schema({
     nombre: String,
+    wanId: {
+        type: Schema.Types.ObjectId,
+        ref: 'Ip'
+    },
     wan: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Ip',
+        type: String,
         required: true,
-        unique: true
+        trim: true
     },
     lan: {
         type:String,

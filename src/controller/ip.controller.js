@@ -6,7 +6,6 @@ import ping from 'ping';
 import os from "os"
 import { exec } from "child_process";
 import util from "util";
-import { Router } from "express";
 
 export const getIps = async (req, res) => {
   try {
@@ -51,7 +50,7 @@ export const deleteIp = async (req, res) => {
 
     return res.json({ message: "IP eliminada correctamente ", ip:ipEliminda})
   } catch (error) {
-    consolo.error('Error al eliminar la IP: ', error.message)
+    console.error('Error al eliminar la IP: ', error.message)
     return res.status(500).json({ message: "Error al eliminar la IP: ", error: error.message})
   }
 };
@@ -110,7 +109,8 @@ export const uploadIp = async (req, res) => {
   if (!existeRouter) {
     await RouterModel.create({
       nombre: `Router - ${ipConArea.area?.area || ipConArea.direccion}`,
-      wan: ipConArea._id,
+      wanId: ipActualizada._id,
+      wan: ipConArea.direccion,
       userAdmin: "",
       passAdmin: "",
       lan: "",
